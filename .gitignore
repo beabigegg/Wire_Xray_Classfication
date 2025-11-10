@@ -69,6 +69,11 @@ temp.txt
 nul
 labels/
 
+# Inference results
+inference_results.csv
+inference_results.json
+**/inference_results.*
+
 # Logs
 *.log
 
