@@ -1,0 +1,24 @@
+# View Classifier Configuration
+# Binary classification: TOP vs SIDE
+
+model_name: resnet18  # ResNet18 pretrained on ImageNet
+num_classes: 2  # TOP, SIDE
+epochs: 50
+batch_size: 32  # Balanced data, can use larger batch
+learning_rate: 0.001
+weight_decay: 0.0001
+device: auto  # 'auto', 'cuda', 'cpu'
+num_workers: 4
+early_stopping_patience: 10
+save_best_only: true
+optimizer: Adam  # Adam, AdamW, SGD
+scheduler: ReduceLROnPlateau
+
+scheduler_params:
+  mode: max  # Maximize accuracy
+  factor: 0.5  # Reduce LR by half
+  patience: 5  # Wait 5 epochs before reducing LR
+
+# Target metrics:
+# - Accuracy > 0.95
+# - Both TOP and SIDE recall > 0.90

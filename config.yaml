@@ -1,0 +1,52 @@
+annotation:
+  default_annotator: TEST_1
+  default_defect: PASS
+  default_view: TOP
+  defect_types:
+  - PASS
+  - 沖線
+  - 晃動
+  - 碰觸
+  view_types:
+  - TOP
+  - SIDE
+application:
+  author: Unknown
+  name: Wire Loop Annotation Tool
+  version: 1.0.0
+gui:
+  annotator_name: test_user
+  bbox_color: '#00ff00'
+  bbox_line_width: 2
+  bbox_selected_color: '#ff0000'
+  canvas_bg_color: '#2b2b2b'
+  image_list_filter: All
+  image_list_sort: Status
+  label_font_size: 10
+  window_height: 900
+  window_title: Wire Loop Annotation Tool
+  window_width: 1600
+image:
+  height: 1004
+  supported_formats:
+  - .png
+  - .jpg
+  - .jpeg
+  - .bmp
+  width: 1004
+paths:
+  data_dir: data
+  database: annotations.db
+  labels_dir: labels
+  models_dir: models
+  runs_dir: runs
+shortcuts:
+  cancel: Escape
+  delete: Delete
+  draw: W
+  next: D
+  open: Ctrl+O
+  prev: A
+  quit: Ctrl+Q
+  save: S
+  undo: Ctrl+Z

@@ -1,0 +1,49 @@
+# Defect Classifier Configuration
+# 4-class classification with severe imbalance: PASS (6), 沖線 (40), 晃動 (58), 碰觸 (68)
+# CRITICAL: PASS class has only 6 samples!
+
+model_name: efficientnet_b0  # Efficient and effective
+num_classes: 4  # PASS, 沖線, 晃動, 碰觸
+epochs: 100
+batch_size: 16  # Smaller batch for stability with imbalanced data
+learning_rate: 0.001
+weight_decay: 0.0001
+device: auto  # 'auto', 'cuda', 'cpu'
+num_workers: 4
+early_stopping_patience: 15  # More patience for imbalanced training
+save_best_only: true
+optimizer: Adam  # Adam, AdamW, SGD
+scheduler: ReduceLROnPlateau
+
+scheduler_params:
+  mode: max  # Maximize balanced accuracy
+  factor: 0.5
+  patience: 5
+
+# Class imbalance handling (CRITICAL)
+use_class_weights: true  # Weight loss by inverse class frequency
+use_focal_loss: false  # Alternative: use focal loss instead of weighted CE
+focal_alpha: 0.25  # Only used if use_focal_loss=true
+focal_gamma: 2.0  # Only used if use_focal_loss=true
+
+# PASS class augmentation (CRITICAL)
+pass_augmentation_factor: 20  # Apply 20x augmentation to PASS samples
+heavy_augmentation_classes:
+  - PASS
+
+# Balanced batch sampling (CRITICAL)
+use_balanced_sampling: true  # Ensure PASS in every batch
+samples_per_class_per_batch: 4  # 4 samples per class = 16 batch size
+
+# Target metrics (CRITICAL):
+# - Balanced Accuracy > 0.80
+# - PASS Recall > 0.70 (MOST IMPORTANT!)
+# - All class recalls > 0.60
+
+# Notes:
+# - PASS class (6 samples) is the bottleneck
+# - All four strategies are used simultaneously:
+#   1. Weighted loss (11.33x weight for PASS)
+#   2. 20x augmentation for PASS
+#   3. Balanced batch sampling
+#   4. Monitor PASS recall every epoch

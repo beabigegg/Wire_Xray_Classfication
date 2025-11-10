@@ -1,0 +1,26 @@
+# Inference Configuration for Wire Loop X-ray Classification
+
+# Model paths
+# Leave empty to auto-detect the latest trained model
+models:
+  detection: ""                                    # YOLO detection model (auto-detect if empty)
+  view_classifier: ""                              # View classifier (auto-detect if empty)
+  defect_classifier: ""                            # Defect classifier (auto-detect if empty)
+
+# Inference parameters
+inference:
+  device: "auto"                    # Device to use: "auto", "cuda", or "cpu"
+  confidence_threshold: 0.5         # YOLO detection confidence threshold (0.0-1.0)
+  batch_size: 16                    # Batch size for processing (memory management)
+  image_size: 1004                  # Expected input image size
+
+# Output configuration
+output:
+  format: "csv"                     # Output format: "csv" or "json"
+  output_dir: "results"             # Directory for output files
+  save_annotated_images: false      # Save images with drawn bounding boxes
+
+# Logging configuration
+logging:
+  level: "INFO"                     # Log level: "DEBUG", "INFO", "WARNING", "ERROR"
+  file: "inference.log"             # Log file path (leave empty for console only)
