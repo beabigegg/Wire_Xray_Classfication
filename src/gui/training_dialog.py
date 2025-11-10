@@ -818,8 +818,39 @@ class TrainingDialog(QDialog):
 
     def _on_model_type_changed(self):
         """Handle model type selection change."""
-        self._load_default_config()
+        # Try to load saved config for this model type first
+        # If no saved config, fallback to default config
+        self._try_load_saved_config_for_current_model()
         self._update_model_specific_visibility()
+
+    def _try_load_saved_config_for_current_model(self):
+        """
+        Try to load most recent saved config for current model type.
+        If no saved config exists, load default config from YAML.
+        """
+        model_type = self._get_model_type_key()
+        config_dir = Path("training_configs")
+
+        # Try to find most recent config for this model type
+        config_pattern = f"{model_type}_config_*.json"
+        config_files = list(config_dir.glob(config_pattern)) if config_dir.exists() else []
+
+        if config_files:
+            # Use most recent config (sorted by filename which includes timestamp)
+            latest_config = sorted(config_files)[-1]
+            try:
+                with open(latest_config, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                self._apply_config_to_ui(config)
+                self._log_message(f"✓ Loaded saved config: {latest_config.name}")
+                return True
+            except Exception as e:
+                self._log_message(f"⚠ Failed to load saved config: {e}")
+                # Fallback to default config
+
+        # No saved config found or failed to load, use default from YAML
+        self._load_default_config()
+        return False
 
     def _validate_training_config(self) -> bool:
         """
@@ -1221,7 +1252,8 @@ class TrainingDialog(QDialog):
         }
 
         # Add model-specific parameters
-        if model_type == 'detection':
+        # Detection models (unified, TOP, SIDE all share YOLO parameters)
+        if model_type in ['detection', 'detection_top', 'detection_side']:
             config['yolo'] = {
                 'imgsz': self.yolo_imgsz_spin.value(),
                 'optimizer': self.yolo_optimizer_combo.currentText(),
@@ -1237,7 +1269,8 @@ class TrainingDialog(QDialog):
                 'dropout': self.view_dropout_spin.value(),
                 'weight_decay': self.view_weight_decay_spin.value()
             }
-        elif model_type == 'defect':
+        # Defect models (unified, TOP, SIDE all share defect parameters)
+        elif model_type in ['defect', 'defect_top', 'defect_side']:
             config['defect'] = {
                 'backbone': self.defect_backbone_combo.currentText(),
                 'loss_function': self.defect_loss_combo.currentText(),
@@ -1254,14 +1287,10 @@ class TrainingDialog(QDialog):
 
     def _apply_config_to_ui(self, config: Dict[str, Any]):
         """Apply loaded configuration to UI widgets."""
-        # Set model type
+        # Note: We DON'T change the model type combo box here
+        # User has already selected the model type they want
+        # This method only applies the configuration parameters to the UI
         model_type = config.get('model_type', 'detection')
-        model_type_index = {
-            'detection': 0,
-            'view': 1,
-            'defect': 2
-        }.get(model_type, 0)
-        self.model_type_combo.setCurrentIndex(model_type_index)
 
         # Apply common parameters
         common = config.get('common', {})
@@ -1285,7 +1314,8 @@ class TrainingDialog(QDialog):
             self.preserve_wire_pairs_checkbox.setChecked(common['preserve_wire_pairs'])
 
         # Apply model-specific parameters
-        if model_type == 'detection' and 'yolo' in config:
+        # Detection models (unified, TOP, SIDE all share YOLO parameters)
+        if model_type in ['detection', 'detection_top', 'detection_side'] and 'yolo' in config:
             yolo = config['yolo']
             if 'imgsz' in yolo:
                 self.yolo_imgsz_spin.setValue(yolo['imgsz'])
@@ -1317,7 +1347,8 @@ class TrainingDialog(QDialog):
             if 'weight_decay' in view:
                 self.view_weight_decay_spin.setValue(view['weight_decay'])
 
-        elif model_type == 'defect' and 'defect' in config:
+        # Defect models (unified, TOP, SIDE all share defect parameters)
+        elif model_type in ['defect', 'defect_top', 'defect_side'] and 'defect' in config:
             defect = config['defect']
             if 'backbone' in defect:
                 index = self.defect_backbone_combo.findText(defect['backbone'])
