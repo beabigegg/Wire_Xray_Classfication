@@ -1,7 +1,7 @@
 # View Classifier Configuration
 # Binary classification: TOP vs SIDE
 
-model_name: resnet18  # ResNet18 pretrained on ImageNet
+model_name: resnet50  # ResNet50 pretrained on ImageNet (upgraded for higher accuracy)
 num_classes: 2  # TOP, SIDE
 epochs: 50
 batch_size: 32  # Balanced data, can use larger batch

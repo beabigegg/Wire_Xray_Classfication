@@ -2,10 +2,10 @@
 # 4-class classification with severe imbalance: PASS (6), 沖線 (40), 晃動 (58), 碰觸 (68)
 # CRITICAL: PASS class has only 6 samples!
 
-model_name: efficientnet_b0  # Efficient and effective
+model_name: efficientnet_b3  # Upgraded for higher accuracy with imbalanced data
 num_classes: 4  # PASS, 沖線, 晃動, 碰觸
 epochs: 100
-batch_size: 16  # Smaller batch for stability with imbalanced data
+batch_size: 12  # Reduced for larger model (was 16)
 learning_rate: 0.001
 weight_decay: 0.0001
 device: auto  # 'auto', 'cuda', 'cpu'

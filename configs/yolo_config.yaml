@@ -1,10 +1,10 @@
 # YOLO Detection Model Configuration
 # For wire loop detection in X-ray images
 
-model_name: yolov8n  # Options: yolov8n, yolov8s, yolov8m, yolov8l, yolov8x
+model_name: yolov8m  # Upgraded for higher accuracy (was yolov8n)
 epochs: 100
 imgsz: 1004  # Fixed size for this dataset (do not change)
-batch: 16  # Adjust based on GPU memory
+batch: 12  # Reduced for larger model (was 16)
 lr0: 0.01  # Initial learning rate
 patience: 20  # Early stopping patience
 device: auto  # 'auto', 'cuda', 'cpu'
