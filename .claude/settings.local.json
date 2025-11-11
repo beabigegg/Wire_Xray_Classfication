@@ -5,7 +5,15 @@
       "Bash(git commit:*)",
       "Bash(conda list:*)",
       "Bash(cmd /c \"if exist runs (echo runs/ exists && dir runs /b) else (echo runs/ does not exist)\")",
-      "Bash(conda env:*)"
+      "Bash(conda env:*)",
+      "Bash(cmd /c \"if exist runs (echo runs/ exists &amp;&amp; dir runs /b) else (echo runs/ does not exist)\")",
+      "Bash(findstr:*)",
+      "Bash(cmd /c \"dir runs\\view /s /b 2>nul | findstr tfevents\")",
+      "Bash(cmd /c \"dir runs\\detection_top /s /b 2>nul | findstr tfevents\")",
+      "Bash(cmd /c \"dir runs /ad /b\")",
+      "Bash(cmd /c \"dir runs\")",
+      "Bash(cat:*)",
+      "Bash(\"C:\\Users\\lin46\\.conda\\envs\\wire_sag\\python.exe\" scripts/backfill_yolo_tensorboard.py runs/detection_top/yolo_20251111_094917)"
     ],
     "deny": [],
     "ask": []

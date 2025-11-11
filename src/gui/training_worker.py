@@ -415,9 +415,16 @@ class TrainingWorker(QThread):
         monitor = TrainingMonitor(total_epochs=total_epochs)
         monitor.start()
 
-        # Setup TensorBoard writer
+        # Setup TensorBoard writer and logger
         from torch.utils.tensorboard import SummaryWriter
+        from src.training.tensorboard_logger import TensorBoardLogger
+
         self.trainer.writer = SummaryWriter(log_dir=str(run_dir))
+        self.trainer.tb_logger = TensorBoardLogger(
+            log_dir=str(run_dir),
+            image_log_frequency=10,
+            histogram_log_frequency=10
+        )
 
         # Add training run to database
         config_json = json.dumps(self.config)

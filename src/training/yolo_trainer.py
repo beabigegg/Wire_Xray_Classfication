@@ -195,6 +195,9 @@ class YOLOTrainer:
 
             print(f"{'='*70}\n")
 
+            # Log training metrics to TensorBoard
+            self._log_results_to_tensorboard(run_dir)
+
             # Copy best model to our models directory
             saved_model = self.model_manager.save_model(
                 model=self.model,
@@ -263,6 +266,70 @@ class YOLOTrainer:
         }
 
         return metrics
+
+    def _log_results_to_tensorboard(self, run_dir: Path):
+        """
+        Parse YOLO results.csv and log metrics to TensorBoard.
+
+        Args:
+            run_dir: Directory where YOLO saved training results
+        """
+        try:
+            import csv
+            from torch.utils.tensorboard import SummaryWriter
+
+            results_csv = run_dir / 'results.csv'
+            if not results_csv.exists():
+                print(f"Warning: results.csv not found at {results_csv}")
+                return
+
+            # Create TensorBoard writer
+            writer = SummaryWriter(log_dir=str(run_dir))
+
+            # Read and parse CSV
+            with open(results_csv, 'r') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+
+            # Log each epoch's metrics
+            for row in rows:
+                epoch = int(row.get('epoch', 0))
+
+                # Training losses
+                if 'train/box_loss' in row:
+                    writer.add_scalar('train/box_loss', float(row['train/box_loss']), epoch)
+                if 'train/cls_loss' in row:
+                    writer.add_scalar('train/cls_loss', float(row['train/cls_loss']), epoch)
+                if 'train/dfl_loss' in row:
+                    writer.add_scalar('train/dfl_loss', float(row['train/dfl_loss']), epoch)
+
+                # Validation losses
+                if 'val/box_loss' in row:
+                    writer.add_scalar('val/box_loss', float(row['val/box_loss']), epoch)
+                if 'val/cls_loss' in row:
+                    writer.add_scalar('val/cls_loss', float(row['val/cls_loss']), epoch)
+                if 'val/dfl_loss' in row:
+                    writer.add_scalar('val/dfl_loss', float(row['val/dfl_loss']), epoch)
+
+                # Metrics
+                if 'metrics/precision(B)' in row:
+                    writer.add_scalar('metrics/precision', float(row['metrics/precision(B)']), epoch)
+                if 'metrics/recall(B)' in row:
+                    writer.add_scalar('metrics/recall', float(row['metrics/recall(B)']), epoch)
+                if 'metrics/mAP50(B)' in row:
+                    writer.add_scalar('metrics/mAP50', float(row['metrics/mAP50(B)']), epoch)
+                if 'metrics/mAP50-95(B)' in row:
+                    writer.add_scalar('metrics/mAP50-95', float(row['metrics/mAP50-95(B)']), epoch)
+
+                # Learning rates
+                if 'lr/pg0' in row:
+                    writer.add_scalar('learning_rate/pg0', float(row['lr/pg0']), epoch)
+
+            writer.close()
+            print(f"✓ Logged {len(rows)} epochs to TensorBoard")
+
+        except Exception as e:
+            print(f"Warning: Failed to log results to TensorBoard: {e}")
 
     def export_model(
         self,
