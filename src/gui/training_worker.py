@@ -320,9 +320,10 @@ class TrainingWorker(QThread):
         Returns:
             Path to trained model
         """
-        if self.model_type == 'detection':
+        # Support VIEW-aware model types
+        if self.model_type in ['detection', 'detection_top', 'detection_side']:
             return self._train_detection()
-        elif self.model_type in ['view', 'defect']:
+        elif self.model_type in ['view', 'defect', 'defect_top', 'defect_side']:
             return self._train_classifier()
         else:
             raise ValueError(f"Unknown model type: {self.model_type}")
@@ -469,7 +470,8 @@ class TrainingWorker(QThread):
                 if self.trainer.scheduler is not None:
                     import torch
                     if isinstance(self.trainer.scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-                        metric_key = 'balanced_accuracy' if self.model_type == 'defect' else 'accuracy'
+                        # Support VIEW-aware defect models
+                        metric_key = 'balanced_accuracy' if self.model_type in ['defect', 'defect_top', 'defect_side'] else 'accuracy'
                         self.trainer.scheduler.step(val_metrics[metric_key])
                     else:
                         self.trainer.scheduler.step()
@@ -482,7 +484,8 @@ class TrainingWorker(QThread):
                     'val_balanced_accuracy': val_metrics.get('balanced_accuracy', 0.0)
                 }
 
-                if self.model_type == 'defect':
+                # Support VIEW-aware defect models
+                if self.model_type in ['defect', 'defect_top', 'defect_side']:
                     metrics_summary['pass_recall'] = val_metrics.get('pass_recall', 0.0)
 
                 self.epoch_completed.emit(epoch, metrics_summary)
@@ -492,7 +495,8 @@ class TrainingWorker(QThread):
                 self.log_message.emit('INFO', f'  Train Loss: {train_metrics["loss"]:.4f}, Val Loss: {val_metrics["loss"]:.4f}')
 
                 # Determine best metric to track
-                if self.model_type == 'defect':
+                # Support VIEW-aware defect models
+                if self.model_type in ['defect', 'defect_top', 'defect_side']:
                     current_metric = val_metrics['balanced_accuracy']
                     self.log_message.emit('INFO', f'  Val Balanced Accuracy: {current_metric:.4f}')
                 else:
@@ -515,7 +519,8 @@ class TrainingWorker(QThread):
                             'TOP_precision': val_metrics.get('TOP_precision', 0.0),
                             'SIDE_precision': val_metrics.get('SIDE_precision', 0.0)
                         })
-                    elif self.model_type == 'defect':
+                    # Support VIEW-aware defect models
+                    elif self.model_type in ['defect', 'defect_top', 'defect_side']:
                         save_metrics.update({
                             'balanced_accuracy': val_metrics.get('balanced_accuracy', 0.0),
                             'pass_recall': val_metrics.get('pass_recall', 0.0),
