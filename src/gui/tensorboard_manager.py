@@ -82,83 +82,95 @@ class TensorBoardManager:
         # Try multiple methods to launch TensorBoard
         import sys
         import shutil
+        import time
 
-        # Method 1: Try using current Python's tensorboard module
-        cmd = [
+        # Try methods in order of reliability
+        methods = []
+
+        # Method 1: Direct tensorboard command (most reliable in conda env)
+        tensorboard_exe = shutil.which("tensorboard")
+        if tensorboard_exe:
+            methods.append(("Direct tensorboard command", [
+                tensorboard_exe,
+                f"--logdir={logdir}",
+                f"--port={port}",
+                "--host=localhost"
+            ]))
+
+        # Method 2: Python -m tensorboard.main (correct module path)
+        methods.append(("Python -m tensorboard.main", [
             sys.executable,
             "-m",
-            "tensorboard",
+            "tensorboard.main",
             f"--logdir={logdir}",
             f"--port={port}",
             "--host=localhost"
-        ]
+        ]))
 
-        logger.info(f"Attempting to start TensorBoard: {' '.join(cmd)}")
+        # Method 3: Check Scripts folder (Windows conda installations)
+        scripts_tensorboard = Path(sys.executable).parent / "Scripts" / "tensorboard.exe"
+        if scripts_tensorboard.exists():
+            methods.append(("Scripts folder tensorboard", [
+                str(scripts_tensorboard),
+                f"--logdir={logdir}",
+                f"--port={port}",
+                "--host=localhost"
+            ]))
 
-        try:
-            self.process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
-            )
+        # Try each method until one succeeds
+        last_error = ""
+        for method_name, cmd in methods:
+            logger.info(f"Trying {method_name}: {' '.join(cmd)}")
 
-            # Wait briefly to check if process started successfully
-            import time
-            time.sleep(1)
+            try:
+                self.process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
+                )
 
-            if self.process.poll() is not None:
-                # Process terminated immediately, read error
-                stderr = self.process.stderr.read().decode('utf-8', errors='ignore')
-                logger.warning(f"Method 1 failed: {stderr[:200]}")
+                # Wait briefly to check if process started successfully
+                time.sleep(2)
 
-                # Method 2: Try using tensorboard command directly (if in PATH)
-                tensorboard_exe = shutil.which("tensorboard")
-                if tensorboard_exe:
-                    logger.info(f"Trying Method 2: Direct tensorboard command at {tensorboard_exe}")
-                    cmd = [
-                        tensorboard_exe,
-                        f"--logdir={logdir}",
-                        f"--port={port}",
-                        "--host=localhost"
-                    ]
+                if self.process.poll() is None:
+                    # Process is still running - success!
+                    self.port = port
+                    self.logdir = str(logdir)
+                    logger.info(f"✓ TensorBoard started successfully on port {port} using {method_name}")
 
-                    self.process = subprocess.Popen(
-                        cmd,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
-                    )
-                    time.sleep(1)
+                    # Auto-open browser
+                    if auto_open:
+                        url = self.get_tensorboard_url()
+                        logger.info(f"Opening TensorBoard in browser: {url}")
+                        webbrowser.open(url)
 
-                    if self.process.poll() is not None:
-                        stderr = self.process.stderr.read().decode('utf-8', errors='ignore')
-                        logger.error(f"Method 2 also failed: {stderr[:200]}")
-                        logger.error("All methods to start TensorBoard failed. Please ensure:\n"
-                                   "1. TensorBoard is installed: pip install tensorboard\n"
-                                   "2. Or start the app using run_annotation.bat")
-                        return False
+                    return True
                 else:
-                    logger.error("tensorboard command not found in PATH")
-                    logger.error("Please install TensorBoard: pip install tensorboard")
-                    return False
+                    # Process terminated - read error
+                    stderr = self.process.stderr.read().decode('utf-8', errors='ignore') if self.process.stderr else ""
+                    last_error = stderr[:300] if stderr else "Process terminated immediately"
+                    logger.warning(f"✗ {method_name} failed: {last_error}")
 
-            self.port = port
-            self.logdir = str(logdir)
+            except Exception as e:
+                last_error = str(e)
+                logger.warning(f"✗ {method_name} exception: {e}")
+                continue
 
-            logger.info(f"TensorBoard started successfully on port {port}")
-
-            # Auto-open browser
-            if auto_open:
-                url = self.get_tensorboard_url()
-                logger.info(f"Opening TensorBoard in browser: {url}")
-                webbrowser.open(url)
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Failed to start TensorBoard: {e}")
-            return False
+        # All methods failed
+        logger.error("=" * 60)
+        logger.error("All TensorBoard launch methods failed!")
+        logger.error(f"Last error: {last_error}")
+        logger.error("=" * 60)
+        logger.error("Solutions:")
+        logger.error("1. Ensure TensorBoard is installed in conda environment:")
+        logger.error("   conda activate wire_sag")
+        logger.error("   pip install tensorboard")
+        logger.error("2. Start the app using run_annotation.bat")
+        logger.error("3. Or manually start TensorBoard:")
+        logger.error(f"   tensorboard --logdir={logdir} --port={port}")
+        logger.error("=" * 60)
+        return False
 
     def stop_tensorboard(self) -> bool:
         """
