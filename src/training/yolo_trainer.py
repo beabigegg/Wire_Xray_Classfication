@@ -33,7 +33,8 @@ class YOLOTrainer:
         self,
         config: YOLOConfig,
         db: Database,
-        models_dir: str = 'models'
+        models_dir: str = 'models',
+        model_type: str = 'detection'
     ):
         """
         Initialize YOLO trainer.
@@ -42,6 +43,7 @@ class YOLOTrainer:
             config: YOLO training configuration
             db: Database instance
             models_dir: Directory for model storage
+            model_type: Model type ('detection', 'detection_top', 'detection_side')
         """
         if YOLO is None:
             raise ImportError(
@@ -50,6 +52,7 @@ class YOLOTrainer:
 
         self.config = config
         self.db = db
+        self.model_type = model_type
         self.model_manager = ModelManager(models_dir=models_dir)
 
         # Model
@@ -195,7 +198,7 @@ class YOLOTrainer:
             # Copy best model to our models directory
             saved_model = self.model_manager.save_model(
                 model=self.model,
-                model_type='detection',
+                model_type=self.model_type,  # Use dynamic model_type (detection, detection_top, detection_side)
                 model_name=self.config.model_name,
                 metrics=final_metrics,
                 config={

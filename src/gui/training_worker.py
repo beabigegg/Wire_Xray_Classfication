@@ -181,7 +181,8 @@ class TrainingWorker(QThread):
             self.trainer = YOLOTrainer(
                 config=config_obj,
                 db=self.db,
-                models_dir='models'
+                models_dir='models',
+                model_type=self.model_type  # Pass model_type for correct directory (detection/detection_top/detection_side)
             )
             self.log_message.emit('INFO', f'Created YOLO trainer: {config_obj.model_name}')
 
