@@ -304,6 +304,21 @@ class TrainingDialog(QDialog):
 
     def _create_yolo_params(self):
         """Create YOLO-specific parameters."""
+        # Model name (base model selection)
+        self.yolo_model_combo = QComboBox()
+        self.yolo_model_combo.addItems(["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolov8x"])
+        self.yolo_model_combo.setCurrentText("yolov8m")
+        self.yolo_model_combo.setToolTip(
+            "YOLO base model selection:\n"
+            "• yolov8n: Nano - fastest, smallest (3M params)\n"
+            "• yolov8s: Small - good balance (11M params)\n"
+            "• yolov8m: Medium - recommended (26M params)\n"
+            "• yolov8l: Large - high accuracy (44M params)\n"
+            "• yolov8x: Extra large - best accuracy (68M params)"
+        )
+        self.yolo_model_label = QLabel("Base Model:")
+        self.model_specific_layout.addRow(self.yolo_model_label, self.yolo_model_combo)
+
         # Image size
         self.yolo_imgsz_spin = QSpinBox()
         self.yolo_imgsz_spin.setRange(320, 1280)
@@ -372,18 +387,23 @@ class TrainingDialog(QDialog):
 
     def _create_view_classifier_params(self):
         """Create View Classifier-specific parameters."""
-        # Backbone
+        # Backbone (model_name)
         self.view_backbone_combo = QComboBox()
-        self.view_backbone_combo.addItems(["resnet18", "resnet34", "resnet50", "efficientnet_b0"])
-        self.view_backbone_combo.setCurrentText("resnet18")
+        self.view_backbone_combo.addItems([
+            "resnet18", "resnet34", "resnet50", "resnet101", "resnet152",
+            "efficientnet_b0", "efficientnet_b1", "efficientnet_b2", "efficientnet_b3", "efficientnet_b4"
+        ])
+        self.view_backbone_combo.setCurrentText("resnet50")  # Updated default to resnet50
         self.view_backbone_combo.setToolTip(
             "Backbone network architecture:\n"
-            "• resnet18: Fast, lightweight (recommended for start)\n"
-            "• resnet34: Good balance of speed and accuracy\n"
-            "• resnet50: Higher accuracy but slower\n"
-            "• efficientnet_b0: Modern, efficient architecture"
+            "• resnet18: Fast, lightweight (11M params)\n"
+            "• resnet34: Good balance (22M params)\n"
+            "• resnet50: Recommended - high accuracy (25M params)\n"
+            "• resnet101: Very high accuracy (45M params)\n"
+            "• efficientnet_b0: Efficient baseline (5M params)\n"
+            "• efficientnet_b3: Good balance (12M params)"
         )
-        self.view_backbone_label = QLabel("Backbone:")
+        self.view_backbone_label = QLabel("Base Model:")
         self.model_specific_layout.addRow(self.view_backbone_label, self.view_backbone_combo)
 
         # Pretrained
@@ -440,18 +460,24 @@ class TrainingDialog(QDialog):
 
     def _create_defect_classifier_params(self):
         """Create Defect Classifier-specific parameters."""
-        # Backbone
+        # Backbone (model_name)
         self.defect_backbone_combo = QComboBox()
-        self.defect_backbone_combo.addItems(["resnet18", "resnet34", "resnet50", "efficientnet_b0"])
-        self.defect_backbone_combo.setCurrentText("resnet18")
+        self.defect_backbone_combo.addItems([
+            "resnet18", "resnet34", "resnet50", "resnet101", "resnet152",
+            "efficientnet_b0", "efficientnet_b1", "efficientnet_b2", "efficientnet_b3", "efficientnet_b4",
+            "efficientnet_b5", "efficientnet_b6", "efficientnet_b7"
+        ])
+        self.defect_backbone_combo.setCurrentText("efficientnet_b3")  # Updated default to efficientnet_b3
         self.defect_backbone_combo.setToolTip(
             "Backbone network architecture:\n"
-            "• resnet18: Fast, lightweight (recommended for start)\n"
-            "• resnet34: Good balance of speed and accuracy\n"
-            "• resnet50: Higher accuracy but slower\n"
-            "• efficientnet_b0: Modern, efficient architecture"
+            "• resnet18: Fast, lightweight (11M params)\n"
+            "• resnet50: Good for balanced data (25M params)\n"
+            "• efficientnet_b0: Efficient baseline (5M params)\n"
+            "• efficientnet_b3: Recommended for imbalanced data (12M params)\n"
+            "• efficientnet_b5: High accuracy (30M params)\n"
+            "• efficientnet_b7: Best accuracy but slower (66M params)"
         )
-        self.defect_backbone_label = QLabel("Backbone:")
+        self.defect_backbone_label = QLabel("Base Model:")
         self.model_specific_layout.addRow(self.defect_backbone_label, self.defect_backbone_combo)
 
         # Loss function
@@ -564,6 +590,7 @@ class TrainingDialog(QDialog):
 
         # Hide all first
         yolo_widgets = [
+            self.yolo_model_label, self.yolo_model_combo,  # Added base model selection
             self.yolo_imgsz_label, self.yolo_imgsz_spin,
             self.yolo_optimizer_label, self.yolo_optimizer_combo,
             self.yolo_warmup_label, self.yolo_warmup_spin,
@@ -571,7 +598,7 @@ class TrainingDialog(QDialog):
             self.yolo_iou_label, self.yolo_iou_spin
         ]
         view_widgets = [
-            self.view_backbone_label, self.view_backbone_combo,
+            self.view_backbone_label, self.view_backbone_combo,  # This is the base model selection
             self.view_pretrained_label, self.view_pretrained_checkbox,
             self.view_scheduler_label, self.view_scheduler_combo,
             self.view_dropout_label, self.view_dropout_spin,
@@ -750,6 +777,22 @@ class TrainingDialog(QDialog):
             self.patience_spin.setValue(patience)
 
             self.save_best_checkbox.setChecked(config.get('save_best_only', True))
+
+            # Load model_name based on model type
+            model_name = config.get('model_name', None)
+            if model_name:
+                if model_type in ['detection', 'detection_top', 'detection_side']:
+                    index = self.yolo_model_combo.findText(model_name)
+                    if index >= 0:
+                        self.yolo_model_combo.setCurrentIndex(index)
+                elif model_type == 'view':
+                    index = self.view_backbone_combo.findText(model_name)
+                    if index >= 0:
+                        self.view_backbone_combo.setCurrentIndex(index)
+                elif model_type in ['defect', 'defect_top', 'defect_side']:
+                    index = self.defect_backbone_combo.findText(model_name)
+                    if index >= 0:
+                        self.defect_backbone_combo.setCurrentIndex(index)
 
             logger.info(f"Loaded config from {config_file}")
 
@@ -934,25 +977,28 @@ class TrainingDialog(QDialog):
 
         # Model-specific parameters
         if self.model_specific_group.isChecked():
-            if model_type == "detection":
+            if model_type in ['detection', 'detection_top', 'detection_side']:
                 config.update({
+                    'model_name': self.yolo_model_combo.currentText(),  # Base model selection
                     'imgsz': self.yolo_imgsz_spin.value(),
                     'optimizer': self.yolo_optimizer_combo.currentText(),
                     'warmup_epochs': self.yolo_warmup_spin.value(),
                     'conf_threshold': self.yolo_conf_spin.value(),
                     'iou_threshold': self.yolo_iou_spin.value()
                 })
-            elif model_type == "view":
+            elif model_type == 'view':
                 config.update({
-                    'backbone': self.view_backbone_combo.currentText(),
+                    'model_name': self.view_backbone_combo.currentText(),  # Base model selection
+                    'backbone': self.view_backbone_combo.currentText(),  # Keep for backward compatibility
                     'pretrained': self.view_pretrained_checkbox.isChecked(),
                     'scheduler': self.view_scheduler_combo.currentText(),
                     'dropout': self.view_dropout_spin.value(),
                     'weight_decay': self.view_weight_decay_spin.value()
                 })
-            elif model_type == "defect":
+            elif model_type in ['defect', 'defect_top', 'defect_side']:
                 config.update({
-                    'backbone': self.defect_backbone_combo.currentText(),
+                    'model_name': self.defect_backbone_combo.currentText(),  # Base model selection
+                    'backbone': self.defect_backbone_combo.currentText(),  # Keep for backward compatibility
                     'loss_function': self.defect_loss_combo.currentText(),
                     'focal_gamma': self.defect_focal_gamma_spin.value(),
                     'auto_class_weights': self.defect_class_weights_checkbox.isChecked(),
@@ -1261,6 +1307,7 @@ class TrainingDialog(QDialog):
         # Detection models (unified, TOP, SIDE all share YOLO parameters)
         if model_type in ['detection', 'detection_top', 'detection_side']:
             config['yolo'] = {
+                'model_name': self.yolo_model_combo.currentText(),  # Base model selection
                 'imgsz': self.yolo_imgsz_spin.value(),
                 'optimizer': self.yolo_optimizer_combo.currentText(),
                 'warmup_epochs': self.yolo_warmup_spin.value(),
@@ -1269,7 +1316,8 @@ class TrainingDialog(QDialog):
             }
         elif model_type == 'view':
             config['view'] = {
-                'backbone': self.view_backbone_combo.currentText(),
+                'model_name': self.view_backbone_combo.currentText(),  # Base model (backbone)
+                'backbone': self.view_backbone_combo.currentText(),  # Keep for backward compatibility
                 'pretrained': self.view_pretrained_checkbox.isChecked(),
                 'scheduler': self.view_scheduler_combo.currentText(),
                 'dropout': self.view_dropout_spin.value(),
@@ -1278,7 +1326,8 @@ class TrainingDialog(QDialog):
         # Defect models (unified, TOP, SIDE all share defect parameters)
         elif model_type in ['defect', 'defect_top', 'defect_side']:
             config['defect'] = {
-                'backbone': self.defect_backbone_combo.currentText(),
+                'model_name': self.defect_backbone_combo.currentText(),  # Base model (backbone)
+                'backbone': self.defect_backbone_combo.currentText(),  # Keep for backward compatibility
                 'loss_function': self.defect_loss_combo.currentText(),
                 'focal_gamma': self.defect_focal_gamma_spin.value(),
                 'use_class_weights': self.defect_class_weights_checkbox.isChecked(),
@@ -1323,6 +1372,11 @@ class TrainingDialog(QDialog):
         # Detection models (unified, TOP, SIDE all share YOLO parameters)
         if model_type in ['detection', 'detection_top', 'detection_side'] and 'yolo' in config:
             yolo = config['yolo']
+            # Load model_name (base model)
+            if 'model_name' in yolo:
+                index = self.yolo_model_combo.findText(yolo['model_name'])
+                if index >= 0:
+                    self.yolo_model_combo.setCurrentIndex(index)
             if 'imgsz' in yolo:
                 self.yolo_imgsz_spin.setValue(yolo['imgsz'])
             if 'optimizer' in yolo:
@@ -1338,10 +1392,11 @@ class TrainingDialog(QDialog):
 
         elif model_type == 'view' and 'view' in config:
             view = config['view']
-            if 'backbone' in view:
-                index = self.view_backbone_combo.findText(view['backbone'])
-                if index >= 0:
-                    self.view_backbone_combo.setCurrentIndex(index)
+            # Load model_name (prefer model_name, fallback to backbone for backward compatibility)
+            model_name = view.get('model_name', view.get('backbone', 'resnet50'))
+            index = self.view_backbone_combo.findText(model_name)
+            if index >= 0:
+                self.view_backbone_combo.setCurrentIndex(index)
             if 'pretrained' in view:
                 self.view_pretrained_checkbox.setChecked(view['pretrained'])
             if 'scheduler' in view:
@@ -1356,10 +1411,11 @@ class TrainingDialog(QDialog):
         # Defect models (unified, TOP, SIDE all share defect parameters)
         elif model_type in ['defect', 'defect_top', 'defect_side'] and 'defect' in config:
             defect = config['defect']
-            if 'backbone' in defect:
-                index = self.defect_backbone_combo.findText(defect['backbone'])
-                if index >= 0:
-                    self.defect_backbone_combo.setCurrentIndex(index)
+            # Load model_name (prefer model_name, fallback to backbone for backward compatibility)
+            model_name = defect.get('model_name', defect.get('backbone', 'efficientnet_b3'))
+            index = self.defect_backbone_combo.findText(model_name)
+            if index >= 0:
+                self.defect_backbone_combo.setCurrentIndex(index)
             if 'loss_function' in defect:
                 index = self.defect_loss_combo.findText(defect['loss_function'])
                 if index >= 0:
