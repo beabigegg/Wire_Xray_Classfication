@@ -155,7 +155,10 @@ class TrainingWorker(QThread):
 
     def _create_trainer(self):
         """Create trainer instance based on model type."""
-        if self.model_type == 'detection':
+        # Support VIEW-aware model types
+        # detection_top, detection_side use same YOLO trainer (different datasets)
+        # defect_top, defect_side use same Defect classifier (different datasets)
+        if self.model_type in ['detection', 'detection_top', 'detection_side']:
             # YOLO detection trainer
             # Map UI parameters to config parameters
             yolo_config = self.config.copy()
@@ -208,8 +211,8 @@ class TrainingWorker(QThread):
             )
             self.log_message.emit('INFO', f'Created View classifier: {config_obj.model_name}')
 
-        elif self.model_type == 'defect':
-            # Defect classifier trainer
+        elif self.model_type in ['defect', 'defect_top', 'defect_side']:
+            # Defect classifier trainer (supports VIEW-aware variants)
             # Map loss_function parameter to config flags
             defect_config = self.config.copy()
             loss_function = defect_config.get('loss_function', 'Focal')

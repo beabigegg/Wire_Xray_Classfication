@@ -1847,7 +1847,13 @@ class TrainingDialog(QDialog):
             # Prepare data
             data_prep = DataPreparator(db_path=self.db_path, random_seed=42)
             preserve_wire_pairs = self.preserve_wire_pairs_checkbox.isChecked()
-            view_aware = model_type in ['detection_top', 'detection_side', 'defect_top', 'defect_side']
+
+            # In batch training mode, always use VIEW-aware to prepare all 5 datasets
+            # In single training mode, use VIEW-aware only for view-specific models
+            if self.is_batch_training:
+                view_aware = True  # Always use VIEW-aware in batch mode
+            else:
+                view_aware = model_type in ['detection_top', 'detection_side', 'defect_top', 'defect_side']
 
             self._log_message("Preparing datasets...")
             complete_info = data_prep.prepare_full_pipeline(
