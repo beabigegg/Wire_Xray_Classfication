@@ -120,7 +120,7 @@ class YOLOTrainer:
             'device': device
         })
         run_id = self.db.add_training_run(
-            model_type='detection',
+            model_type=self.model_type,  # Use dynamic model_type (detection/detection_top/detection_side)
             config_json=config_json
         )
 

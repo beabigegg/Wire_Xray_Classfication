@@ -192,7 +192,8 @@ class DefectClassifier:
         self,
         config: DefectClassifierConfig,
         db: Database,
-        models_dir: str = 'models'
+        models_dir: str = 'models',
+        model_type: str = 'defect'
     ):
         """
         Initialize defect classifier trainer.
@@ -201,9 +202,11 @@ class DefectClassifier:
             config: Training configuration
             db: Database instance
             models_dir: Directory for model storage
+            model_type: Model type ('defect', 'defect_top', 'defect_side')
         """
         self.config = config
         self.db = db
+        self.model_type = model_type
         self.model_manager = ModelManager(models_dir=models_dir)
         self.device_manager = DeviceManager()
 
@@ -694,7 +697,7 @@ class DefectClassifier:
         # Add training run to database
         config_json = json.dumps(self.config.__dict__)
         run_id = self.db.add_training_run(
-            model_type='defect',
+            model_type=self.model_type,  # Use dynamic model_type (defect/defect_top/defect_side)
             config_json=config_json
         )
 
@@ -762,7 +765,7 @@ class DefectClassifier:
                     # Save model
                     save_result = self.model_manager.save_model(
                         model=self.model,
-                        model_type='defect',
+                        model_type=self.model_type,  # Use dynamic model_type (defect/defect_top/defect_side)
                         model_name=self.config.model_name,
                         metrics={
                             'balanced_accuracy': val_metrics['balanced_accuracy'],
