@@ -1890,6 +1890,10 @@ class TrainingDialog(QDialog):
         self._log_message(f"Model: {self._get_model_type_display_name(model_type)}")
         self._log_message("=" * 60 + "\n")
 
+        # Clear progress indicators for the new model
+        self.progress_bar.setValue(0)
+        self.metrics_table.setRowCount(0)
+
         # Set model type in UI
         self._set_model_type_in_ui(model_type)
 
