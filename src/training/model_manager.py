@@ -136,6 +136,9 @@ class ModelManager:
             model_path = self.get_model_path(model_type, version)
             metadata_path = model_path.with_suffix('.json')
 
+            # Ensure parent directory exists (safety check)
+            model_path.parent.mkdir(parents=True, exist_ok=True)
+
             # Save model
             if hasattr(model, 'save'):
                 # YOLO model
@@ -211,8 +214,8 @@ class ModelManager:
 
             # Load model
             if model_path.suffix == '.pt':
-                if metadata.get('model_type') == 'detection':
-                    # YOLO model
+                if metadata.get('model_type') in ['detection', 'detection_top', 'detection_side']:
+                    # YOLO model (unified or VIEW-aware)
                     from ultralytics import YOLO
                     model = YOLO(str(model_path))
                 else:
@@ -257,10 +260,15 @@ class ModelManager:
         if model_type:
             search_dirs = [self.models_dir / model_type]
         else:
+            # Search all model types (both unified and VIEW-aware)
             search_dirs = [
-                self.models_dir / 'detection',
                 self.models_dir / 'view',
-                self.models_dir / 'defect'
+                self.models_dir / 'detection',
+                self.models_dir / 'detection_top',
+                self.models_dir / 'detection_side',
+                self.models_dir / 'defect',
+                self.models_dir / 'defect_top',
+                self.models_dir / 'defect_side'
             ]
 
         # Find all model files
@@ -360,11 +368,11 @@ class ModelManager:
 
         # Auto-select metric based on model type
         if metric == 'auto':
-            if model_type == 'detection':
+            if model_type in ['detection', 'detection_top', 'detection_side']:
                 metric = 'map50'
             elif model_type == 'view':
                 metric = 'accuracy'
-            elif model_type == 'defect':
+            elif model_type in ['defect', 'defect_top', 'defect_side']:
                 metric = 'balanced_accuracy'
 
         # Find best model
