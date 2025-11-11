@@ -79,21 +79,23 @@ class TensorBoardManager:
                 logger.error("No available port for TensorBoard")
                 return False
 
+        # Try multiple methods to launch TensorBoard
+        import sys
+        import shutil
+
+        # Method 1: Try using current Python's tensorboard module
+        cmd = [
+            sys.executable,
+            "-m",
+            "tensorboard",
+            f"--logdir={logdir}",
+            f"--port={port}",
+            "--host=localhost"
+        ]
+
+        logger.info(f"Attempting to start TensorBoard: {' '.join(cmd)}")
+
         try:
-            # Start TensorBoard subprocess using Python module
-            # This ensures we use the TensorBoard from the current Python environment
-            import sys
-            cmd = [
-                sys.executable,
-                "-m",
-                "tensorboard",
-                f"--logdir={logdir}",
-                f"--port={port}",
-                "--host=localhost"
-            ]
-
-            logger.info(f"Starting TensorBoard: {' '.join(cmd)}")
-
             self.process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -101,10 +103,50 @@ class TensorBoardManager:
                 creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
             )
 
+            # Wait briefly to check if process started successfully
+            import time
+            time.sleep(1)
+
+            if self.process.poll() is not None:
+                # Process terminated immediately, read error
+                stderr = self.process.stderr.read().decode('utf-8', errors='ignore')
+                logger.warning(f"Method 1 failed: {stderr[:200]}")
+
+                # Method 2: Try using tensorboard command directly (if in PATH)
+                tensorboard_exe = shutil.which("tensorboard")
+                if tensorboard_exe:
+                    logger.info(f"Trying Method 2: Direct tensorboard command at {tensorboard_exe}")
+                    cmd = [
+                        tensorboard_exe,
+                        f"--logdir={logdir}",
+                        f"--port={port}",
+                        "--host=localhost"
+                    ]
+
+                    self.process = subprocess.Popen(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
+                    )
+                    time.sleep(1)
+
+                    if self.process.poll() is not None:
+                        stderr = self.process.stderr.read().decode('utf-8', errors='ignore')
+                        logger.error(f"Method 2 also failed: {stderr[:200]}")
+                        logger.error("All methods to start TensorBoard failed. Please ensure:\n"
+                                   "1. TensorBoard is installed: pip install tensorboard\n"
+                                   "2. Or start the app using run_annotation.bat")
+                        return False
+                else:
+                    logger.error("tensorboard command not found in PATH")
+                    logger.error("Please install TensorBoard: pip install tensorboard")
+                    return False
+
             self.port = port
             self.logdir = str(logdir)
 
-            logger.info(f"TensorBoard started on port {port}")
+            logger.info(f"TensorBoard started successfully on port {port}")
 
             # Auto-open browser
             if auto_open:
@@ -114,12 +156,6 @@ class TensorBoardManager:
 
             return True
 
-        except FileNotFoundError:
-            logger.error("TensorBoard not found. Make sure it's installed in current environment: pip install tensorboard")
-            return False
-        except ModuleNotFoundError:
-            logger.error("TensorBoard module not found. Install it with: pip install tensorboard")
-            return False
         except Exception as e:
             logger.error(f"Failed to start TensorBoard: {e}")
             return False
