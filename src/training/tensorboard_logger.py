@@ -143,6 +143,10 @@ class TensorBoardLogger:
         """
         return epoch % self.histogram_log_frequency == 0
 
+    def flush(self):
+        """Flush the TensorBoard writer to ensure all data is written to disk."""
+        self.writer.flush()
+
     def close(self):
         """Close the TensorBoard writer."""
         self.writer.close()

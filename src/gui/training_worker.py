@@ -490,6 +490,10 @@ class TrainingWorker(QThread):
 
                 self.epoch_completed.emit(epoch, metrics_summary)
 
+                # Flush TensorBoard to ensure data is written to disk
+                if hasattr(self.trainer, 'tb_logger') and self.trainer.tb_logger is not None:
+                    self.trainer.tb_logger.flush()
+
                 # Log epoch summary
                 self.log_message.emit('INFO', f'Epoch {epoch}/{total_epochs} completed')
                 self.log_message.emit('INFO', f'  Train Loss: {train_metrics["loss"]:.4f}, Val Loss: {val_metrics["loss"]:.4f}')
