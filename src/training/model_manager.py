@@ -38,7 +38,17 @@ class ModelManager:
 
     def _create_directory_structure(self):
         """Create organized directory structure for models."""
-        for model_type in ['detection', 'view', 'defect']:
+        # Create directories for both unified and VIEW-aware model types
+        model_types = [
+            'view',              # View classifier (uses both TOP+SIDE)
+            'detection',         # Unified detection (legacy)
+            'detection_top',     # VIEW-aware TOP detection
+            'detection_side',    # VIEW-aware SIDE detection
+            'defect',            # Unified defect (legacy)
+            'defect_top',        # VIEW-aware TOP defect
+            'defect_side'        # VIEW-aware SIDE defect
+        ]
+        for model_type in model_types:
             (self.models_dir / model_type).mkdir(parents=True, exist_ok=True)
 
     def generate_version_string(
