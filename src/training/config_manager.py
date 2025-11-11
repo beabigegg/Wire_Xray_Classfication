@@ -21,10 +21,10 @@ class ConfigError(Exception):
 @dataclass
 class YOLOConfig:
     """Configuration for YOLO detection model training."""
-    model_name: str = 'yolov8n'  # yolov8n, yolov8s, yolov8m
+    model_name: str = 'yolov8m'  # yolov8n, yolov8s, yolov8m (upgraded for accuracy)
     epochs: int = 100
     imgsz: int = 1004
-    batch: int = 16
+    batch: int = 12  # Reduced for larger model
     lr0: float = 0.01
     patience: int = 20
     device: str = 'auto'  # 'auto', 'cuda', 'cpu'
@@ -41,7 +41,7 @@ class YOLOConfig:
 @dataclass
 class ViewClassifierConfig:
     """Configuration for view classifier training."""
-    model_name: str = 'resnet18'
+    model_name: str = 'resnet50'  # Upgraded from resnet18 for higher accuracy
     num_classes: int = 2
     epochs: int = 50
     batch_size: int = 32
@@ -63,10 +63,10 @@ class ViewClassifierConfig:
 @dataclass
 class DefectClassifierConfig:
     """Configuration for defect classifier training."""
-    model_name: str = 'efficientnet_b0'
+    model_name: str = 'efficientnet_b3'  # Upgraded from b0 for higher accuracy
     num_classes: int = 4
     epochs: int = 100
-    batch_size: int = 16
+    batch_size: int = 12  # Reduced for larger model
     learning_rate: float = 0.001
     weight_decay: float = 1e-4
     device: str = 'auto'
