@@ -707,10 +707,16 @@ class TrainingDialog(QDialog):
             return
 
         model_type = self._get_model_type_key()
+
+        # Map VIEW-aware model types to correct config files
         config_file_map = {
-            'detection': 'yolo_config.yaml',
             'view': 'view_classifier_config.yaml',
-            'defect': 'defect_classifier_config.yaml'
+            'detection': 'yolo_config.yaml',
+            'detection_top': 'yolo_config.yaml',      # VIEW-aware TOP detection
+            'detection_side': 'yolo_config.yaml',     # VIEW-aware SIDE detection
+            'defect': 'defect_classifier_config.yaml',
+            'defect_top': 'defect_classifier_config.yaml',    # VIEW-aware TOP defect
+            'defect_side': 'defect_classifier_config.yaml'    # VIEW-aware SIDE defect
         }
 
         config_file = self.config_dir / config_file_map.get(model_type, 'yolo_config.yaml')
