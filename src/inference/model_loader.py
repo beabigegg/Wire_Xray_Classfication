@@ -179,16 +179,24 @@ class ModelLoader:
             raise RuntimeError(f"Failed to load YOLO {view_type} model: {e}")
 
     def _load_view_classifier(self) -> torch.nn.Module:
-        """Load View classifier model (ResNet18)."""
+        """Load View classifier model (dynamically determines architecture from checkpoint)."""
         logger.info(f"Loading View classifier from {self.view_classifier_path}")
         try:
-            # Create model architecture (ResNet18 with 2 classes)
-            model = timm.create_model('resnet18', pretrained=False, num_classes=2)
-
-            # Load checkpoint
+            # Load checkpoint first to determine model architecture
             checkpoint = torch.load(self.view_classifier_path, map_location=self.device)
 
-            # Handle different checkpoint formats
+            # Try to get model_name from checkpoint (fallback to resnet18 for backward compatibility)
+            if 'model_name' in checkpoint:
+                model_name = checkpoint['model_name']
+                logger.info(f"Creating model architecture: {model_name}")
+            else:
+                model_name = 'resnet18'
+                logger.warning(f"model_name not found in checkpoint, defaulting to {model_name}")
+
+            # Create model architecture with 2 classes (TOP, SIDE)
+            model = timm.create_model(model_name, pretrained=False, num_classes=2)
+
+            # Load state dict
             if 'model_state_dict' in checkpoint:
                 model.load_state_dict(checkpoint['model_state_dict'])
             elif 'state_dict' in checkpoint:
@@ -200,22 +208,30 @@ class ModelLoader:
             model = model.to(self.device)
             model.eval()
 
-            logger.info("View classifier loaded successfully")
+            logger.info(f"View classifier ({model_name}) loaded successfully")
             return model
         except Exception as e:
             raise RuntimeError(f"Failed to load View classifier: {e}")
 
     def _load_defect_classifier(self, model_path: Path, view_type: str) -> torch.nn.Module:
-        """Load view-specific Defect classifier model (EfficientNet-B0)."""
+        """Load view-specific Defect classifier model (dynamically determines architecture from checkpoint)."""
         logger.info(f"Loading Defect {view_type} classifier from {model_path}")
         try:
-            # Create model architecture (EfficientNet-B0 with 4 classes)
-            model = timm.create_model('efficientnet_b0', pretrained=False, num_classes=4)
-
-            # Load checkpoint
+            # Load checkpoint first to determine model architecture
             checkpoint = torch.load(model_path, map_location=self.device)
 
-            # Handle different checkpoint formats
+            # Try to get model_name from checkpoint (fallback to efficientnet_b0 for backward compatibility)
+            if 'model_name' in checkpoint:
+                model_name = checkpoint['model_name']
+                logger.info(f"Creating model architecture: {model_name}")
+            else:
+                model_name = 'efficientnet_b0'
+                logger.warning(f"model_name not found in checkpoint, defaulting to {model_name}")
+
+            # Create model architecture with 4 classes (PASS, 沖線, 晃動, 碰觸)
+            model = timm.create_model(model_name, pretrained=False, num_classes=4)
+
+            # Load state dict
             if 'model_state_dict' in checkpoint:
                 model.load_state_dict(checkpoint['model_state_dict'])
             elif 'state_dict' in checkpoint:
@@ -227,7 +243,7 @@ class ModelLoader:
             model = model.to(self.device)
             model.eval()
 
-            logger.info(f"Defect {view_type} classifier loaded successfully")
+            logger.info(f"Defect {view_type} classifier ({model_name}) loaded successfully")
             return model
         except Exception as e:
             raise RuntimeError(f"Failed to load Defect {view_type} classifier: {e}")

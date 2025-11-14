@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
+    QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QListWidget, QListWidgetItem,
     QPushButton, QLabel, QTextBrowser, QGroupBox, QMessageBox
 )
 from PyQt6.QtCore import Qt
@@ -45,20 +45,40 @@ class ModelSelectorDialog(QDialog):
         self.model_manager = ModelManager(models_dir=models_dir)
         self.models_dir = Path(models_dir)
 
-        # Model type configurations
+        # Model type configurations (VIEW-aware architecture with legacy support)
         self.model_types = {
-            'detection': {
-                'label': 'Detection Model (YOLO)',
-                'metric_key': 'map50',
-                'metric_label': 'mAP@0.5'
-            },
             'view': {
                 'label': 'View Classifier (TOP/SIDE)',
                 'metric_key': 'accuracy',
                 'metric_label': 'Accuracy'
             },
+            'detection': {
+                'label': 'Detection Model (YOLO) - Unified [Legacy]',
+                'metric_key': 'map50',
+                'metric_label': 'mAP@0.5'
+            },
+            'detection_top': {
+                'label': 'Detection Model (YOLO) - TOP',
+                'metric_key': 'map50',
+                'metric_label': 'mAP@0.5'
+            },
+            'detection_side': {
+                'label': 'Detection Model (YOLO) - SIDE',
+                'metric_key': 'map50',
+                'metric_label': 'mAP@0.5'
+            },
             'defect': {
-                'label': 'Defect Classifier',
+                'label': 'Defect Classifier - Unified [Legacy]',
+                'metric_key': 'balanced_accuracy',
+                'metric_label': 'Balanced Accuracy'
+            },
+            'defect_top': {
+                'label': 'Defect Classifier - TOP',
+                'metric_key': 'balanced_accuracy',
+                'metric_label': 'Balanced Accuracy'
+            },
+            'defect_side': {
+                'label': 'Defect Classifier - SIDE',
                 'metric_key': 'balanced_accuracy',
                 'metric_label': 'Balanced Accuracy'
             }
@@ -71,8 +91,8 @@ class ModelSelectorDialog(QDialog):
         self.delete_buttons: Dict[str, QPushButton] = {}
 
         # Setup UI
-        self.setWindowTitle("Model Version Manager")
-        self.setMinimumSize(1200, 600)
+        self.setWindowTitle("Model Version Manager - VIEW-aware Architecture")
+        self.setMinimumSize(1400, 800)
         self._setup_ui()
 
         # Load initial data
@@ -80,14 +100,28 @@ class ModelSelectorDialog(QDialog):
 
     def _setup_ui(self):
         """Create and layout UI components."""
-        main_layout = QHBoxLayout()
+        main_layout = QGridLayout()
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(10, 10, 10, 10)
 
-        # Create a section for each model type
+        # Define layout positions for each model type (row, col)
+        # Row 0: View Classifier and Detection models
+        # Row 1: Defect Classifier models
+        layout_positions = {
+            'view': (0, 0),
+            'detection': (0, 1),
+            'detection_top': (0, 2),
+            'detection_side': (0, 3),
+            'defect': (1, 0),
+            'defect_top': (1, 1),
+            'defect_side': (1, 2)
+        }
+
+        # Create a section for each model type at specified position
         for model_type, config in self.model_types.items():
             section = self._create_model_section(model_type, config)
-            main_layout.addWidget(section)
+            row, col = layout_positions[model_type]
+            main_layout.addWidget(section, row, col)
 
         self.setLayout(main_layout)
 

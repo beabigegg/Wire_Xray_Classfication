@@ -616,6 +616,29 @@ class ViewClassifier:
 
             print(f"{'='*70}\n")
 
+            # Save final best model version to database
+            if best_model_path:
+                try:
+                    # Extract version from path
+                    from pathlib import Path
+                    model_file = Path(best_model_path)
+                    version = model_file.stem
+
+                    model_id = self.db.save_model_version(
+                        model_name=self.config.model_name,
+                        model_type='view',
+                        version=version,
+                        filepath=best_model_path,
+                        metrics={
+                            'accuracy': self.best_accuracy
+                        },
+                        set_active=True  # Set newly trained model as active
+                    )
+                    print(f"Model version saved to database (ID: {model_id})")
+                except Exception as e:
+                    print(f"Warning: Failed to save model version to database: {e}")
+                    # Continue even if database save fails
+
             # Update database
             final_metrics = {
                 'best_accuracy': self.best_accuracy

@@ -219,6 +219,21 @@ class YOLOTrainer:
 
             print(f"Model saved to: {saved_model['model_path']}")
 
+            # Save model version to database
+            try:
+                model_id = self.db.save_model_version(
+                    model_name=self.config.model_name,
+                    model_type=self.model_type,
+                    version=saved_model['version'],
+                    filepath=saved_model['model_path'],
+                    metrics=final_metrics,
+                    set_active=True  # Set newly trained model as active
+                )
+                print(f"Model version saved to database (ID: {model_id})")
+            except Exception as e:
+                print(f"Warning: Failed to save model version to database: {e}")
+                # Continue even if database save fails
+
             # Update database
             self.db.update_training_run(
                 run_id=run_id,

@@ -262,15 +262,25 @@ class ModelComparator:
         Get primary metric for model type.
 
         Args:
-            model_type: Type of model (detection/view/defect)
+            model_type: Type of model (view/detection/detection_top/detection_side/
+                                       defect/defect_top/defect_side)
 
         Returns:
             Primary metric name
         """
         metric_map = {
-            'detection': 'mAP_50',  # mAP@0.5 for YOLO
+            # View Classifier
             'view': 'accuracy',
-            'defect': 'balanced_accuracy'
+
+            # Detection Models (YOLO)
+            'detection': 'mAP_50',        # Legacy unified model
+            'detection_top': 'mAP_50',    # VIEW-aware TOP
+            'detection_side': 'mAP_50',   # VIEW-aware SIDE
+
+            # Defect Classifiers
+            'defect': 'balanced_accuracy',      # Legacy unified model
+            'defect_top': 'balanced_accuracy',  # VIEW-aware TOP
+            'defect_side': 'balanced_accuracy'  # VIEW-aware SIDE
         }
 
         return metric_map.get(model_type, 'accuracy')

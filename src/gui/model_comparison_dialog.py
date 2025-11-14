@@ -38,7 +38,9 @@ class ModelComparisonDialog(QDialog):
         Initialize model comparison dialog.
 
         Args:
-            model_type: Model type ('detection', 'view', 'defect')
+            model_type: Model type - supports VIEW-aware architecture:
+                       'view', 'detection', 'detection_top', 'detection_side',
+                       'defect', 'defect_top', 'defect_side'
             db: Database instance
             parent: Parent widget
         """
@@ -62,13 +64,14 @@ class ModelComparisonDialog(QDialog):
 
     def _init_ui(self):
         """Initialize UI components."""
-        self.setWindowTitle(f"Compare {self.model_type.capitalize()} Models")
+        display_name = self._get_model_type_display_name()
+        self.setWindowTitle(f"Compare {display_name}")
         self.setMinimumSize(900, 700)
 
         layout = QVBoxLayout()
 
         # Title
-        title = QLabel(f"<h2>Compare {self.model_type.capitalize()} Models</h2>")
+        title = QLabel(f"<h2>Compare {display_name}</h2>")
         layout.addWidget(title)
 
         # Model selection section
@@ -222,6 +225,19 @@ class ModelComparisonDialog(QDialog):
             error_detail = f"Failed to load models:\n{e}\n\nDetails:\n{traceback.format_exc()}"
             print(error_detail)
             QMessageBox.critical(self, "Error", error_detail)
+
+    def _get_model_type_display_name(self) -> str:
+        """Get display name for model type."""
+        display_names = {
+            'view': 'View Classifier Models',
+            'detection': 'Detection Models (YOLO) - Unified [Legacy]',
+            'detection_top': 'Detection Models (YOLO) - TOP View',
+            'detection_side': 'Detection Models (YOLO) - SIDE View',
+            'defect': 'Defect Classifier Models - Unified [Legacy]',
+            'defect_top': 'Defect Classifier Models - TOP View',
+            'defect_side': 'Defect Classifier Models - SIDE View'
+        }
+        return display_names.get(self.model_type, f"{self.model_type.capitalize()} Models")
 
     def _format_model_name(self, model: Dict) -> str:
         """Format model name for display."""

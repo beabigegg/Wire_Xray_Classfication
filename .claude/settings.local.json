@@ -13,7 +13,16 @@
       "Bash(cmd /c \"dir runs /ad /b\")",
       "Bash(cmd /c \"dir runs\")",
       "Bash(cat:*)",
-      "Bash(\"C:\\Users\\lin46\\.conda\\envs\\wire_sag\\python.exe\" scripts/backfill_yolo_tensorboard.py runs/detection_top/yolo_20251111_094917)"
+      "Bash(\"C:\\Users\\lin46\\.conda\\envs\\wire_sag\\python.exe\" scripts/backfill_yolo_tensorboard.py runs/detection_top/yolo_20251111_094917)",
+      "Bash(nul)",
+      "Bash(python -m py_compile:*)",
+      "Bash(dir:*)",
+      "Bash(cmd /c \"dir /s /b d:\\WORK\\user_scrip\\TOOL\\Wire_Xray_Classfication\\models\\*.pt\")",
+      "Bash(cmd /c \"dir d:\\WORK\\user_scrip\\TOOL\\Wire_Xray_Classfication\\models /ad /b\")",
+      "Bash(python -c:*)",
+      "Bash(python scripts/sync_model_database.py:*)",
+      "Bash(python scripts/delete_all_models.py:*)",
+      "Bash(conda run:*)"
     ],
     "deny": [],
     "ask": []

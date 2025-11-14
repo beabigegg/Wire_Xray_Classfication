@@ -6,6 +6,7 @@ and properties panel for annotating X-ray images.
 """
 
 import os
+import logging
 from pathlib import Path
 from typing import List, Optional
 from PyQt6.QtWidgets import (
@@ -29,6 +30,8 @@ from src.gui.model_comparison_dialog import ModelComparisonDialog
 from src.gui.annotator_dialog import AnnotatorDialog
 from src.inference.model_loader import ModelLoader
 from src.inference.inference_pipeline import InferencePipeline
+
+logger = logging.getLogger(__name__)
 
 
 class AnnotationWindow(QMainWindow):
@@ -1120,18 +1123,34 @@ class AnnotationWindow(QMainWindow):
         """Open model comparison dialog."""
         from PyQt6.QtWidgets import QInputDialog
 
-        # Ask user which model type to compare
-        model_types = ['detection', 'view', 'defect']
-        model_type, ok = QInputDialog.getItem(
+        # Ask user which model type to compare (VIEW-aware architecture)
+        model_type_items = [
+            ('View Classifier', 'view'),
+            ('Detection - TOP View', 'detection_top'),
+            ('Detection - SIDE View', 'detection_side'),
+            ('Detection - Unified [Legacy]', 'detection'),
+            ('Defect - TOP View', 'defect_top'),
+            ('Defect - SIDE View', 'defect_side'),
+            ('Defect - Unified [Legacy]', 'defect')
+        ]
+
+        display_names = [item[0] for item in model_type_items]
+        internal_types = [item[1] for item in model_type_items]
+
+        display_name, ok = QInputDialog.getItem(
             self,
             "Select Model Type",
             "Which model type do you want to compare?",
-            model_types,
+            display_names,
             0,
             False
         )
 
-        if ok and model_type:
+        if ok and display_name:
+            # Get internal model type from display name
+            selected_index = display_names.index(display_name)
+            model_type = internal_types[selected_index]
+
             try:
                 dialog = ModelComparisonDialog(model_type, self.db, self)
                 dialog.exec()
