@@ -542,10 +542,26 @@ class TrainingWorker(QThread):
                         })
 
                     # Save model
+                    # Get model_name from trainer's config object which has proper defaults
+                    if hasattr(self.trainer, 'config') and hasattr(self.trainer.config, 'model_name'):
+                        actual_model_name = self.trainer.config.model_name
+                    else:
+                        # Fallback: use proper defaults based on model type
+                        default_models = {
+                            'view': 'resnet50',
+                            'defect': 'efficientnet_b3',
+                            'defect_top': 'efficientnet_b3',
+                            'defect_side': 'efficientnet_b3',
+                            'detection': 'yolov8m',
+                            'detection_top': 'yolov8m',
+                            'detection_side': 'yolov8m'
+                        }
+                        actual_model_name = self.config.get('model_name', default_models.get(self.model_type, 'unknown'))
+
                     save_result = self.trainer.model_manager.save_model(
                         model=self.trainer.model,
                         model_type=self.model_type,
-                        model_name=self.config.get('model_name', 'model'),
+                        model_name=actual_model_name,
                         metrics=save_metrics,
                         config=self.config,
                         version_prefix='v1'
