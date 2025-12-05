@@ -3,7 +3,7 @@
 ## Purpose
 Provide comprehensive GUI controls for all training hyperparameters and enable pause/resume/cancel functionality for long-running training sessions.
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Advanced Hyperparameter Configuration
 The Training Dialog SHALL expose all major hyperparameters for user configuration based on selected model type.

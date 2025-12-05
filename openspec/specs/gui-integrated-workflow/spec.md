@@ -1,10 +1,8 @@
 # gui-integrated-workflow Specification
 
 ## Purpose
-Provide a unified GUI experience for the complete Wire Loop classification workflow (annotation → training → inference), eliminating the need to switch between separate command-line tools and multiple applications.
-
-## ADDED Requirements
-
+TBD - created by archiving change integrate-gui-workflow. Update Purpose after archive.
+## Requirements
 ### Requirement: GUI Training Configuration
 The system SHALL provide a graphical interface for configuring and launching model training from the annotation window.
 
@@ -201,45 +199,3 @@ The system SHALL maintain consistent state across annotation, training, and infe
 - **AND** offers to view current training progress
 - **AND** prevents multiple concurrent trainings
 
-## MODIFIED Requirements
-
-### Requirement: Annotation Window Menu Structure
-The annotation window menu bar SHALL be extended to include Training and Inference menus.
-
-#### Scenario: Access training functions from menu
-- **WHEN** user opens "Training" menu
-- **THEN** the system displays menu items:
-  - Train Detection Model (Ctrl+Shift+D)
-  - Train View Classifier (Ctrl+Shift+V)
-  - Train Defect Classifier (Ctrl+Shift+F)
-  - Train All Models (Ctrl+Shift+A)
-  - [Separator]
-  - Open TensorBoard (Ctrl+Shift+T)
-  - Manage Models (Ctrl+Shift+M)
-
-#### Scenario: Access inference functions from menu
-- **WHEN** user opens "Inference" menu
-- **THEN** the system displays menu items:
-  - Run on Current Image (Ctrl+I)
-  - Run Batch Inference (Ctrl+Shift+I)
-  - [Separator]
-  - Select Active Models
-  - View Results History
-
-### Requirement: Status Bar Information
-The annotation window status bar SHALL display training and TensorBoard status.
-
-#### Scenario: Display active models in status bar
-- **WHEN** annotation window is open
-- **THEN** the status bar shows "Models: Detection v1, View v2, Defect v1"
-- **AND** clicking on models indicator opens Model Selector Dialog
-
-#### Scenario: Display training status
-- **WHEN** training is in progress
-- **THEN** the status bar shows "Training: [Model Type] - Epoch X/Y"
-- **AND** clicking opens Training Dialog to view progress
-
-#### Scenario: Display TensorBoard status
-- **WHEN** TensorBoard is running
-- **THEN** the status bar shows "TensorBoard: localhost:6006"
-- **AND** clicking opens TensorBoard in browser

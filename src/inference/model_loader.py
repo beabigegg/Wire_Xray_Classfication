@@ -81,8 +81,8 @@ class ModelLoader:
         self.defect_top_model = None
         self.defect_side_model = None
 
-        # Class mappings (must match PyTorch ImageFolder alphabetical order)
-        self.view_classes = ["SIDE", "TOP"]  # Alphabetical order: SIDE=0, TOP=1
+        # Class mappings (must match training order in view_classifier.py)
+        self.view_classes = ["TOP", "SIDE"]  # Match training order: TOP=0, SIDE=1
         self.defect_classes = ["PASS", "沖線", "晃動", "碰觸"]  # 0=PASS, 1=沖線, 2=晃動, 3=碰觸
 
     def _validate_paths(self):
